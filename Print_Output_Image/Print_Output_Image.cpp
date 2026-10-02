@@ -1,28 +1,35 @@
-#include "Color.h"
-#include "Vec3.h"
+#include "RTWeekend.h"
 
-#include <iostream>
+#include "Camera.h"
+#include "Hittable.h"
+#include "HittableList.h"
+#include "Sphere.h"
+
+
+Color RayColor(const Ray& r, const Hittable& world)
+{
+    HitRecord hitRecord;
+    if (world.Hit(r, Interval(0.0,Infinity), hitRecord))
+    {
+        return 0.5 * (hitRecord.Normal + Color(1.0, 1.0, 1.0));
+    }
+
+    Vec3 unitDirection = UnitVector(r.Direction());
+    auto a = 0.5 * (unitDirection.Y() + 1.0);
+
+    return (1.0 - a) * Color(1.0, 1.0, 1.0) + a * Color(0.5, 0.7, 1.0);
+}
 
 int main()
 {
-    // Image
-    int ImageWidth = 256;
-    int ImageHeight = 256;
+    HittableList world;
+    world.Add(std::make_shared<Sphere>(Point3(0.0, 0.0, -1.0), 0.5));
+    world.Add(std::make_shared<Sphere>(Point3(0.0, -100.5, -1.0), 100.0));
 
-    // Render
-    std::cout << "P3\n" << ImageWidth << ' ' << ImageHeight << "\n255\n";
+    Camera camera;
 
-    for (int j = 0; j < ImageHeight; j++)
-    {
-        std::clog << "\rScanlines remaining: " << (ImageHeight - j) << ' ' << std::flush;
-        for (int i = 0; i < ImageWidth; i++)
-        {
-            auto PixelColor = Color(double(i) / (ImageWidth - 1), double(j) / (ImageHeight - 1), 0);
-            WriteColor(std::cout, PixelColor);
-        }
-    }
+    camera.aspectRatio = 16.0 / 9.0;
+    camera.imageWidth = 400;
 
-    std::clog << "\rDone.                        \n";
-
-    return 0;
+    camera.Render(world);
 }
